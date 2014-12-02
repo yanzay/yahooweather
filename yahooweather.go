@@ -7,6 +7,11 @@ import (
 	"net/url"
 )
 
+// Forecast for one date.
+// Code - weather code
+// High - high bound of temperature
+// Low - low bound of temperature
+// Date - string representation of date
 type ForecastItem struct {
 	Code int `json:",string"`
 	High int `json:",string"`
@@ -26,6 +31,7 @@ type response struct {
 	}
 }
 
+// Get forecasts from Yahoo. Returns slice of ForecastItem's
 func GetForecasts(id int64) ([]ForecastItem, error) {
 	request := prepareRequest(id)
 	return makeRequest(request)
