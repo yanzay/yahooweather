@@ -3,15 +3,22 @@ package yahooweather
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 )
 
+// Current weather condition
+type ConditionItem struct {
+	Code int `json:",string"`
+	Temp int `json:",string"`
+}
+
 // Forecast for one date.
-// Code - weather code
-// High - high bound of temperature
-// Low - low bound of temperature
-// Date - string representation of date
+// * Code - weather code
+// * High - high bound of temperature
+// * Low - low bound of temperature
+// * Date - string representation of date
 type ForecastItem struct {
 	Code int `json:",string"`
 	High int `json:",string"`
@@ -24,15 +31,15 @@ type response struct {
 		Results struct {
 			Channel struct {
 				Item struct {
-					Forecast []ForecastItem
+					Condition ConditionItem
+					Forecast  []ForecastItem
 				}
 			}
 		}
 	}
 }
 
-// Get forecasts from Yahoo. Returns slice of ForecastItem's
-func GetForecasts(id int64) ([]ForecastItem, error) {
+func GetWeather(id int64) (ConditionItem, []ForecastItem, error) {
 	request := prepareRequest(id)
 	return makeRequest(request)
 }
@@ -45,13 +52,15 @@ func prepareRequest(id int64) (request string) {
 	return
 }
 
-func makeRequest(request string) ([]ForecastItem, error) {
+func makeRequest(request string) (ConditionItem, []ForecastItem, error) {
+	log.Printf("Requesting %s", request)
 	resp, err := http.Get(request)
 	if err != nil {
-		return nil, err
+		return ConditionItem{}, nil, err
 	}
 	defer resp.Body.Close()
 	r := new(response)
 	json.NewDecoder(resp.Body).Decode(r)
-	return r.Query.Results.Channel.Item.Forecast, nil
+	item := r.Query.Results.Channel.Item
+	return item.Condition, item.Forecast, nil
 }
